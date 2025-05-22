@@ -3,6 +3,7 @@ import threading
 import time
 import pytesseract
 import random
+#https://github.com/Sanoras1/tradeSpamSpammersDnD/tree/main
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 pyautogui.FAILSAFE = True
