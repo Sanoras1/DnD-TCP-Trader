@@ -3,6 +3,7 @@ import threading
 import time
 import pytesseract
 import random
+from PIL import Image
 #https://github.com/Sanoras1/tradeSpamSpammersDnD/tree/main
 
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -11,13 +12,29 @@ name_lock = threading.Lock()
 beginFindName = True
 name = []
 inputNameHasRan = False
+screenshotList = []
+
+def screenshotCreate5():
+     global screenshotList
+     screenshotList.clear()
+     for index in range(5):
+          screenshotName = f"tradeSpamScreenshot{index}.png"
+          pyautogui.screenshot(screenshotName)
+          screenshotList.append(screenshotName)
+          print("screenshot saved {screenshotName}")
+          for screenshot_path in screenshotList:
+               image = Image.open(screenshot_path)
+               image.crop(box=[1000,565,1550,865])
+               image.save(screenshot_path)
+               print("cropped list")
+          index += 1
+          time.sleep(0.1)
  
 def findName():
-    global beginFindName
-    global name
-    while beginFindName == True:
-        screenShot = pyautogui.screenshot()
-        screenShot = screenShot.crop(box=[1000,565,1550,865])
+    global beginFindName, name, screenshotList
+    screenshotCreate5()
+    for screenshotIndex in range(5):
+        screenShot = screenshotList[screenshotIndex]
         text = pytesseract.image_to_string(screenShot)
         print(text)
         index = text.find("has requested")
@@ -43,7 +60,6 @@ def inputName():
         global beginFindName
         global inputNameHasRan
         global name
-        global name
         currentNameIndex = 0
         while True:
              with name_lock:
@@ -64,21 +80,20 @@ def inputName():
 
 def spamTrader():
      numOfTrades = 0
-     insult = ["stinky", "u suk", "im goonin rn", "im wastin your time bub", "rent free big dawg...", "fortnite balls", "you like cd's? Cee Dee's nuts",
-               "when u trading...", "<3 I like to trade you :)"]
+     insult = ["you are stinky", "u suk", "im goonin rn", "im wastin your time bub", "rent free big dawg...", "fortnite balls", "you like cd's? Cee Dee's nuts",
+               "when u trading...", "<3 I like tradin you :)"]
      while True:
           if inputNameHasRan:
                pyautogui.moveTo(2155,353)
                pyautogui.rightClick()
                pyautogui.moveTo(2210,400)
                pyautogui.click()
-               print("spamming")
                numOfTrades = numOfTrades + 1
                if numOfTrades % 50 == 0:
                     print(f"{numOfTrades} trades completed.")
                     pyautogui.moveTo(180,1365)
                     pyautogui.click()
-                    pyautogui.write(insult[random.randint(0,9)])
+                    pyautogui.write(insult[random.randint(0,8)])
                     pyautogui.press('enter')
                     time.sleep(10)
                     print("continuing...")
