@@ -17,46 +17,49 @@ screenshotCreate5HasRan = False
 
 def screenshotCreate5():
      global screenshotList, screenshotCreate5HasRan
-     screenshotList.clear()
-     for index in range(5):
-          screenshotName = f"tradeSpamScreenshot{index}.png"
-          pyautogui.screenshot(screenshotName)
-          screenshotList.append(screenshotName)
-          print("screenshot saved {screenshotName}")
-     for screenshot_path in screenshotList:
-          image = Image.open(screenshot_path)
-          image = image.crop(box=[1000,565,1550,865])
-          image.save(screenshot_path)
-          print("cropped list")
-          time.sleep(0.1)
-     screenshotCreate5HasRan = True
-     time.sleep(10)
+     while True:
+          screenshotList.clear()
+          for index in range(5):
+               screenshotName = f"tradeSpamScreenshot{index}.png"
+               pyautogui.screenshot(region=(1000,565,550,300)).save(screenshotName)
+               screenshotList.append(screenshotName)
+               print(f"screenshot saved {screenshotName}")
+               time.sleep(0.05)
+          screenshotCreate5HasRan = True
+          time.sleep(10)
  
 def findName():
     global beginFindName, name, screenshotList, screenshotCreate5HasRan
-    if screenshotCreate5HasRan:
-     for screenshotIndex in range(5):
-          screenShot = screenshotList[screenshotIndex]
-          text = pytesseract.image_to_string(screenShot)
-          print(text)
-          index = text.find("has requested")
-          if index != -1:
-               before_tradeText = text[:index].strip()
-               words = before_tradeText.split()
-               if words:
-                    possibleName = words[-1]
-                    print(f"Name detected: {possibleName}")
-                    with name_lock:
-                         if possibleName not in name: 
-                              name.append(possibleName)
-                              print(name)
-                              beginFindName = False
-               else:
-                    print("scanning text...")
-          else:
-               print ("trade text not found")
+    while True:
+     if screenshotCreate5HasRan:
+          for screenshotIndex in range(5):
+               screenShot = screenshotList[screenshotIndex]
+               try:
+                    text = pytesseract.image_to_string(screenShot)
+                    print(f"OCR result from screenshot {screenshotIndex}:")
+                    print(text)
+               except Exception as e:
+                    print(f"OCR failed on screenshot {screenshotIndex}: {e}")
+                    continue
 
-          time.sleep(1)
+               index = text.find("has requested")
+               if index != -1:
+                    before_tradeText = text[:index].strip()
+                    words = before_tradeText.split()
+                    if words:
+                         possibleName = words[-1]
+                         print(f"Name detected: {possibleName}")
+                         with name_lock:
+                              if possibleName not in name: 
+                                   name.append(possibleName)
+                                   print(f"updated list of names: {name}")
+                                   beginFindName = False
+                    else:
+                         print("Text found but no name extracted")
+               else:
+                    print ("trade text not found")
+     screenshotCreate5HasRan = False
+     time.sleep(1)
 
 def inputName():
         global beginFindName
@@ -112,4 +115,3 @@ thread4.start()
 
 while True:
     time.sleep(1)
-
