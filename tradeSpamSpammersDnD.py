@@ -4,17 +4,43 @@ import time
 import pytesseract
 import random
 from PIL import Image
+import json
+import os
 #https://github.com/Sanoras1/tradeSpamSpammersDnD/tree/main
 
+#CONFIG
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 pyautogui.FAILSAFE = True
+jsonFile = "usernamesList.json"
+
+#Flags/threading
 name_lock = threading.Lock()
 beginFindName = True
-name = []
 inputNameHasRan = False
+name = []
 screenshotList = []
 screenshotCreate5HasRan = False
 
+#JSON FUNCT
+def loadUsernames():
+     if not os.path.exists(jsonFile):
+          with open(jsonFile, "w") as f:
+               json.dump([], f)
+     with open(jsonFile, "r") as f:
+          return json.load(f)
+     
+def appendUsername(newTr):
+     usernames = loadUsernames()
+     if newTr not in usernames:
+          usernames.append(newTr)
+          with open(jsonFile, "w") as f:
+               json.dump(usernames, f, indent = 2)
+          print(f"Added {newTr} to usernames list.")
+     else:
+          print(f"{newTr} already on file.")
+
+
+#start of threaded functions
 def screenshotCreate5():
      global screenshotList, screenshotCreate5HasRan
      while True:
@@ -30,6 +56,8 @@ def screenshotCreate5():
  
 def findName():
     global beginFindName, name, screenshotList, screenshotCreate5HasRan
+    time.sleep(10)
+    name[:] = loadUsernames()
     while True:
      if screenshotCreate5HasRan:
           for screenshotIndex in range(5):
@@ -51,8 +79,8 @@ def findName():
                          print(f"Name detected: {possibleName}")
                          with name_lock:
                               if possibleName not in name: 
+                                   appendUsername(possibleName)
                                    name.append(possibleName)
-                                   print(f"updated list of names: {name}")
                                    beginFindName = False
                     else:
                          print("Text found but no name extracted")
@@ -69,7 +97,7 @@ def inputName():
         while True:
              with name_lock:
                   if name:
-                       currentName = name[currentNameIndex % len(name)]
+                       currentName = name[random.randint(0,len(name)-1)]
                        print(f"trading with: {currentName}")
                        pyautogui.moveTo(1400,822)
                        pyautogui.click()
@@ -78,7 +106,7 @@ def inputName():
                        pyautogui.hotkey('ctrl', 'a')
                        pyautogui.write(currentName)
                        inputNameHasRan = True
-                       time.sleep(10)
+                       time.sleep(30)
                        currentNameIndex += 1
                        beginFindName = True
 
@@ -94,13 +122,13 @@ def spamTrader():
                pyautogui.moveTo(2210,400)
                pyautogui.click()
                numOfTrades = numOfTrades + 1
-               if numOfTrades % 50 == 0:
+               if numOfTrades % 25 == 0:
                     print(f"{numOfTrades} trades completed.")
                     pyautogui.moveTo(180,1365)
                     pyautogui.click()
                     pyautogui.write(insult[random.randint(0,8)])
                     pyautogui.press('enter')
-                    time.sleep(10)
+                    time.sleep(2)
                     print("continuing...")
           time.sleep(0.0125)
 
