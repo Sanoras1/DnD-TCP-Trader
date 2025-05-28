@@ -8,12 +8,13 @@ import json
 import os
 #https://github.com/Sanoras1/tradeSpamSpammersDnD/tree/main
 
+#pip install opencv-python(gives numpy64int make sure to convert)
 #CONFIG
 pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 pyautogui.FAILSAFE = True
 jsonFile = "usernamesList.json"
 
-#Flags/threading/globalVars
+#Flags/threading
 name_lock = threading.Lock()
 beginFindName = True
 inputNameHasRan = False
@@ -21,9 +22,13 @@ name = []
 screenshotList = []
 screenshotCreate5HasRan = False
 box = ()
+box1 = ()
+box2 = ()
 imageForLocation = "tempRect.png"
+imageForChatLoc = "imageOfChatBar.png"
+imageForFirst = "imageForFirst.png"
 
-#JSON FUNCTIONS
+#JSON FUNCT
 def loadUsernames():
      if not os.path.exists(jsonFile):
           with open(jsonFile, "w") as f:
@@ -41,7 +46,7 @@ def appendUsername(newTr):
      else:
           print(f"{newTr} already on file.")
 
-#FIND RECTANGLE TRADING WINDOW
+#setup locations for each click
 def findRect(imageOfRect):
      global box
      while box == ():
@@ -51,10 +56,31 @@ def findRect(imageOfRect):
                print(f"rectangle found at: {box}")
           else:
                print("rectangle not found")
+#finds location of chat bar (area next to send button for sending "insults")
+def findChat(iChatBar):
+     global box1
+     while box1 == ():
+          box1 = pyautogui.locateOnScreen(iChatBar, confidence=0.8)
+          if box1:
+               box1 = (int(box1.left), int(box1.top), box1.width, box1.height)
+               print(f"Chat bar found at: {box1}")
+          else:
+               print("Chat bar not found.")
+#finds location of the first player who shows up after entering someone's name in search
+def findFirst(iForFirst):
+     global box2
+     while box2 == ():
+          box2 = pyautogui.locateOnScreen(iForFirst, confidence=0.8)
+          if box2:
+               box2 = (int(box1.left), int(box1.top), box1.width, box1.height)
+               print(f"First slot found at: {box2}")
+          else:
+               print("first not found")
 
 findRect(imageForLocation)
-
-#THREADS
+#findChat(imageForChatLoc)     Commented out. Not in current use--
+#findFirst(imageForFirst)
+#start of threaded functions
 def screenshotCreate5():
      global screenshotList, screenshotCreate5HasRan, box
      while True:
@@ -128,7 +154,6 @@ def inputName():
                        currentNameIndex += 1
                        beginFindName = True
 
-
 def spamTrader():
      numOfTrades = 0
      insult = ["you are stinky", "u suk", "im goonin rn", "im wastin your time bub", "rent free big dawg...", "fortnite balls", "you like cd's? Cee Dee's nuts",
@@ -150,7 +175,6 @@ def spamTrader():
                     print("continuing...")
           time.sleep(0.0125)
 
-#STARTING THREADS
 thread1 = threading.Thread(target=inputName, daemon=True)
 thread1.start()
 thread2 = threading.Thread(target=findName, daemon=True)
@@ -160,7 +184,6 @@ thread3.start()
 thread4 = threading.Thread(target=screenshotCreate5, daemon=True)
 thread4.start()
 
-#LOOP WITH TIME.SLEEP TO KEEP MAIN ON LOOP
 while True:
     time.sleep(1)
     time.sleep(1)
