@@ -13,15 +13,17 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 pyautogui.FAILSAFE = True
 jsonFile = "usernamesList.json"
 
-#Flags/threading
+#Flags/threading/globalVars
 name_lock = threading.Lock()
 beginFindName = True
 inputNameHasRan = False
 name = []
 screenshotList = []
 screenshotCreate5HasRan = False
+box = ()
+imageForLocation = "tempRect.png"
 
-#JSON FUNCT
+#JSON FUNCTIONS
 def loadUsernames():
      if not os.path.exists(jsonFile):
           with open(jsonFile, "w") as f:
@@ -39,15 +41,31 @@ def appendUsername(newTr):
      else:
           print(f"{newTr} already on file.")
 
+#FIND RECTANGLE TRADING WINDOW
+def findRect(imageOfRect):
+     global box
+     while box == ():
+          box = pyautogui.locateOnScreen(imageOfRect, confidence=0.8)
+          if box:
+               box = (int(box.left), int(box.top), box.width, box.height)
+               print(f"rectangle found at: {box}")
+          else:
+               print("rectangle not found")
 
-#start of threaded functions
+findRect(imageForLocation)
+
+#THREADS
 def screenshotCreate5():
-     global screenshotList, screenshotCreate5HasRan
+     global screenshotList, screenshotCreate5HasRan, box
      while True:
+          if not box:
+               print("waiting for rectangle to be found...")
+               time.sleep(2)
+               continue
           screenshotList.clear()
           for index in range(5):
                screenshotName = f"tradeSpamScreenshot{index}.png"
-               pyautogui.screenshot(region=(1000,565,550,300)).save(screenshotName)
+               pyautogui.screenshot(region = box).save(screenshotName)
                screenshotList.append(screenshotName)
                print(f"screenshot saved {screenshotName}")
                time.sleep(0.05)
@@ -132,6 +150,7 @@ def spamTrader():
                     print("continuing...")
           time.sleep(0.0125)
 
+#STARTING THREADS
 thread1 = threading.Thread(target=inputName, daemon=True)
 thread1.start()
 thread2 = threading.Thread(target=findName, daemon=True)
@@ -141,5 +160,7 @@ thread3.start()
 thread4 = threading.Thread(target=screenshotCreate5, daemon=True)
 thread4.start()
 
+#LOOP WITH TIME.SLEEP TO KEEP MAIN ON LOOP
 while True:
+    time.sleep(1)
     time.sleep(1)
