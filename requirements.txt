@@ -1,5 +1,6 @@
 pyautogui
 pytesseract
 Pillow
+pillow
 scapy
 requests

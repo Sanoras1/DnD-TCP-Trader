@@ -3,6 +3,7 @@ from scapy.all import sniff, Raw, IP
 
 myCondition = {"ip": "52.223.44.23"}
 # TODO: determine min/max and conditions to be considered a spammer
+"todo: determine min/max, and condition to be considered spammer| work on the actual coding bit for determining when you are traded after entering trade"
 def detect_spam_trade(interface="Ethernet 2", min_len=100, max_len=200, hex_pattern=b'\x68\x65\x6c\x6c\x6f'):
     """
     Sniffs packets on the network and looks for certain conditions in the raw packet data.
@@ -34,4 +35,5 @@ def detect_spam_trade(interface="Ethernet 2", min_len=100, max_len=200, hex_patt
 
 # Call the function with your custom conditions
 if myCondition:
+if "ip" in myCondition:
     detect_spam_trade()
