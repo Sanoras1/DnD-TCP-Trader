@@ -12,3 +12,7 @@ Requirements to run:
 Image resources used by the automation scripts are stored in the `assets`
 directory at the repository root. If you modify or replace any of the PNG
 files make sure to keep the same filenames as referenced in the code.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
