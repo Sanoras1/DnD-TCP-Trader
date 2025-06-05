@@ -10,7 +10,13 @@ import os
 
 #pip install opencv-python(gives numpy64int make sure to convert)
 #CONFIG
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Allow overriding the Tesseract path via the ``TESSERACT_CMD`` environment
+# variable.  If the variable is not set, fall back to the default Windows
+# installation path used previously.
+pytesseract.pytesseract.tesseract_cmd = os.getenv(
+    "TESSERACT_CMD",
+    r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+)
 pyautogui.FAILSAFE = True
 jsonFile = "usernamesList.json"
 
