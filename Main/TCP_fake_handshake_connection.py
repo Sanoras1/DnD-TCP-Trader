@@ -1,54 +1,114 @@
-from scapy.all import sniff, IP, TCP, Raw, send
-import time
+#!/usr/bin/env python3
+"""
+TCP_fake_handshake_connection.py
+────────────────────────────────
+• Sniffs TCP packets from one of several SOURCE_IPs arriving on SOURCE_PORT.
+• For every packet, forges a reply containing a personalised payload built
+  from a rotating list of names read from disk.
+• Sends the forged reply once per second.
 
-SOURCE_IP = "52.223.44.23"  # target to watch
-MY_IP = "192.168.1.133"      # your IP
+HOW TO RUN
+----------
+python3 TCP_fake_handshake_connection.py \
+        --name-file names.txt \
+        --source-ips 52.223.44.23,35.71.175.214 \
+        --port 20204
+"""
 
+import argparse, itertools, threading, time
+from pathlib import Path
+from scapy.all import sniff, send, IP, TCP, Raw
 
-stop_sniffing = False
-tcp_state = {}  # (src, sport, dst, dport) => (seq, ack, flags)
+###############################################################################
+# 1. Helpers
+###############################################################################
 
-# Use this to track TCP flow state
-def packet_callback(pkt):
-    if IP in pkt and TCP in pkt:
-        ip = pkt[IP]
-        tcp = pkt[TCP]
-        key = (ip.src, tcp.sport, ip.dst, tcp.dport)
-        seq = tcp.seq
-        ack = tcp.ack
-        flags = tcp.flags
-        tcp_state[key] = (seq, ack, flags)
-        print(f"[Captured] {key} | SEQ={seq} ACK={ack} FLAGS={flags}")
+def iter_names(path: Path):
+    """Yield names forever in round-robin order."""
+    names = [n.strip() for n in path.read_text().splitlines() if n.strip()]
+    if not names:
+        raise ValueError(f"{path} is empty")
+    return itertools.cycle(names)
 
-# Use this to safely replay packets using stored TCP state
-def replay_packet():
-    for (src, sport, dst, dport), (seq, ack, flags) in tcp_state.items():
-        if src == SOURCE_IP and dst == MY_IP:
-            payload = bytes.fromhex("d7000000f20728000a073537353039323912b9010a074c656f6e4a7567121242617262617269616e23313139393431363122334c6561646572626f61726452616e6b446174613a49645f4c6561646572626f61726452616e6b5f4e656f70687974655f4949492801380142334c6561646572626f61726452616e6b446174613a49645f4c6561646572626f61726452616e6b5f4e656f70687974655f4949494a2c4c6561646572626f61726452616e6b446174613a49645f4c6561646572626f61726452616e6b5f43616465741a083233363036333736")
-            ip = IP(src=MY_IP, dst=src)
-            tcp = TCP(sport=dport, dport=sport, seq=ack, ack=seq, flags=flags)
+BASE_TEMPLATE = bytes.fromhex(
+    #   ... untouched prefix …
+    "d7000000f20728000a07"            #    <- header
+    "{name_hex}"                      #    <- we’ll splice the encoded name here
+    "12b9010a074c656f6e4a7567"        #    <- rest of the message
+    #   ^^^^^^^ dummy bytes – leave as-is unless you know the protocol
+)
 
-            packet = ip / tcp / Raw(load=payload)
+def build_payload(name: str) -> bytes:
+    """Return a protobuf-ish payload with the name encoded as length-prefixed."""
+    name_bytes = name.encode("utf-8")
+    length_byte = len(name_bytes).to_bytes(1, "big")
+    name_hex = (length_byte + name_bytes).hex()
+    return bytes.fromhex(BASE_TEMPLATE.replace("{name_hex}", name_hex))
 
-            print(f"[Replay] SEQ={tcp.seq} ACK={tcp.ack} Flags={tcp.flags}")
-            decoded = payload.decode(errors="ignore")
-            if not decoded.startswith("^"):
-                send(packet)
-    print("No matching flow to replay")
+###############################################################################
+# 2. Packet logic
+###############################################################################
 
-def sniff_packets():
-    sniff(filter=f"tcp and src host {SOURCE_IP}", prn=packet_callback, store=0, stop_filter=lambda _: stop_sniffing)
+class FakeTCPResponder:
+    def __init__(self, ips, port, name_iter):
+        self.allowed_ips = set(ips)
+        self.port = port
+        self.name_iter = name_iter
+        self.state = {}          # flow-key -> (seq, ack, flags)
 
-import threading
-sniffer_thread = threading.Thread(target=sniff_packets)
-sniffer_thread.start()
+    def packet_callback(self, pkt):
+        if IP in pkt and TCP in pkt:
+            ip, tcp = pkt[IP], pkt[TCP]
+            if ip.src in self.allowed_ips and tcp.sport == self.port:
+                key = (ip.src, tcp.sport, ip.dst, tcp.dport)
+                self.state[key] = (tcp.seq, tcp.ack, tcp.flags)
 
-try:
-    while True:
-        replay_packet()
-        time.sleep(1)
-except KeyboardInterrupt:
-    print("\n[!] KeyboardInterrupt: stopping...")
-    stop_sniffing = True
-    sniffer_thread.join()
-    print("[+] Exited cleanly.")
+    def replay_once(self):
+        for (src, sport, dst, dport), (seq, ack, flags) in list(self.state.items()):
+            name = next(self.name_iter)
+            payload = build_payload(name)
+            forged = IP(src=dst, dst=src) / \
+                     TCP(sport=dport, dport=sport, seq=ack, ack=seq, flags=flags) / \
+                     Raw(load=payload)
+            forged = forged.__class__(bytes(forged))  # recompute checksums
+            send(forged, verbose=False)
+            print(f"[SEND] to {src}:{sport}  name={name}")
+
+###############################################################################
+# 3. Main
+###############################################################################
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--name-file",  required=True, type=Path)
+    ap.add_argument("--source-ips", required=True,
+                    help="comma-separated list, e.g. 52.223.44.23,35.71.175.214")
+    ap.add_argument("--port",       default=20204, type=int)
+    args = ap.parse_args()
+
+    names = iter_names(args.name_file)
+    ips   = [ip.strip() for ip in args.source_ips.split(",") if ip.strip()]
+    responder = FakeTCPResponder(ips, args.port, names)
+
+    stop = threading.Event()
+    thread = threading.Thread(
+        target=lambda: sniff(
+            filter=f"tcp and src port {args.port} and (" +
+                   " or ".join(f"src host {ip}" for ip in ips) + ")",
+            prn=responder.packet_callback,
+            store=False,
+            stop_filter=lambda _: stop.is_set()),
+        daemon=True)
+    thread.start()
+
+    try:
+        while True:
+            responder.replay_once()
+            time.sleep(1)
+    except KeyboardInterrupt:
+        stop.set()
+        thread.join()
+        print("\n[!] Exiting cleanly.")
+
+if __name__ == "__main__":
+    main()
