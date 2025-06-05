@@ -4,6 +4,7 @@ import time
 SOURCE_IP = "52.223.44.23"  # target to watch
 MY_IP = "192.168.1.133"      # your IP
 
+stop_sniffing = False
 tcp_state = {}  # (src, sport, dst, dport) => (seq, ack, flags)
 
 # Use this to track TCP flow state
@@ -29,9 +30,9 @@ def replay_packet():
             packet = ip / tcp / Raw(load=payload)
 
             print(f"[Replay] SEQ={tcp.seq} ACK={tcp.ack} Flags={tcp.flags}")
-            checkTrading = [payload.decode]
-            if checkTrading[0] != "^":
-                send(packet) 
+            decoded = payload.decode(errors="ignore")
+            if not decoded.startswith("^"):
+                send(packet)
     print("No matching flow to replay")
 
 def sniff_packets():
