@@ -1,0 +1,25 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Environment files
+.env
+venv/
+env/
+
+# Build artifacts
+*.egg-info/
+
+# Screenshots and images
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
