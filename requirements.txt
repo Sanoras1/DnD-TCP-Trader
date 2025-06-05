@@ -1,4 +1,0 @@
-pyautogui
-pytesseract
-Pillow
-scapy
