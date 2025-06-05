@@ -4,6 +4,9 @@ import time
 SOURCE_IP = "52.223.44.23"  # target to watch
 MY_IP = "192.168.1.133"      # your IP
 
+# Flag used to stop sniffing when the script receives an interrupt
+stop_sniffing = False
+
 tcp_state = {}  # (src, sport, dst, dport) => (seq, ack, flags)
 
 # Use this to track TCP flow state

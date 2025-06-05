@@ -28,7 +28,9 @@ python Main/TCP_fake_handshake_connection.py
 
 Image resources used by the automation scripts are stored in the `assets` directory. If you modify or replace any of the PNG files, keep the filenames the same so the scripts continue to locate them.
 # tradeSpamSpammersDnD
-first integration of a script that trade spams trade bots in dark and darker
+This project contains several experiments for automating actions in the game
+**Dark and Darker**. Use responsibly and at your own risk. Automating gameplay
+may violate the game's terms of service.
 
 Requirements to run:
 1. pyautogui (pip install pyautogui)
@@ -36,7 +38,12 @@ Requirements to run:
 3. tesseract OCR
 4. requires Windows operating system
 5. not required, but utilizes docker
-6. if using docker also make note to used a linux based os, on windows you can use services such as wls.dll
+6. if using Docker make note to use a Linux based OS. On Windows you can use services such as **WSL**.
+
+Install the dependencies with:
+```bash
+pip install -r requirements.txt
+```
 
 Image resources used by the automation scripts are stored in the `assets`
 directory at the repository root. If you modify or replace any of the PNG

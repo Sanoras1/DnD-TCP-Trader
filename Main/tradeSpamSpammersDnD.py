@@ -72,14 +72,14 @@ def findChat(iChatBar):
                print("Chat bar not found.")
 #finds location of the first player who shows up after entering someone's name in search
 def findFirst(iForFirst):
-     global box2
-     while box2 == ():
-          box2 = pyautogui.locateOnScreen(iForFirst, confidence=0.8)
-          if box2:
-               box2 = (int(box1.left), int(box1.top), box1.width, box1.height)
-               print(f"First slot found at: {box2}")
-          else:
-               print("first not found")
+    global box2
+    while box2 == ():
+        box2 = pyautogui.locateOnScreen(iForFirst, confidence=0.8)
+        if box2:
+            box2 = (int(box2.left), int(box2.top), box2.width, box2.height)
+            print(f"First slot found at: {box2}")
+        else:
+            print("first not found")
 
 findRect(imageForLocation)
 #findChat(imageForChatLoc)     Commented out. Not in current use--
@@ -189,5 +189,4 @@ thread4 = threading.Thread(target=screenshotCreate5, daemon=True)
 thread4.start()
 
 while True:
-    time.sleep(1)
     time.sleep(1)
