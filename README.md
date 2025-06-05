@@ -8,3 +8,7 @@ Requirements to run:
 4. requires Windows operating system
 5. not required, but utilizes docker
 6. if using docker also make note to used a linux based os, on windows you can use services such as wls.dll
+
+Image resources used by the automation scripts are stored in the `assets`
+directory at the repository root. If you modify or replace any of the PNG
+files make sure to keep the same filenames as referenced in the code.

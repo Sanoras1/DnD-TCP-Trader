@@ -14,6 +14,10 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 pyautogui.FAILSAFE = True
 jsonFile = "usernamesList.json"
 
+# Path setup for image assets
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'assets')
+
 #Flags/threading
 name_lock = threading.Lock()
 beginFindName = True
@@ -25,10 +29,10 @@ box = ()
 box1 = ()
 box2 = ()
 box4 = ()
-imageForLocation = "tempRect.png"
-imageForChatLoc = "imageOfChatBar.png"
-imageForFirst = "imageForFirst.png"
-imageForName = "nameInputLocation.png"
+imageForLocation = os.path.join(ASSETS_DIR, "tempRect.png")
+imageForChatLoc = os.path.join(ASSETS_DIR, "imageOfChatBar.png")
+imageForFirst = os.path.join(ASSETS_DIR, "imageForFirst.png")
+imageForName = os.path.join(ASSETS_DIR, "nameInputLocation.png")
 
 #JSON FUNCT
 def loadUsernames():
