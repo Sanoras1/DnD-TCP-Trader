@@ -32,7 +32,7 @@ This project contains several experiments for automating actions in the game
 **Dark and Darker**. Use responsibly and at your own risk. Automating gameplay
 may violate the game's terms of service.
 
-Requirements to run:
+
 1. pyautogui (pip install pyautogui)
 2. pytesseract (pip install pytesseract) this is just a python wrapper for tesseract ocr.
 3. tesseract OCR
