@@ -1,4 +1,4 @@
-# Dark and Darker Sans Toolkit
+# DnD-TCP-Trader
 
 This repository contains various Python scripts for automating trading actions in the game **Dark and Darker**. The tools were created to help combat trade spammers by automating repetitive UI interactions and monitoring network packets.
 
